@@ -8,7 +8,6 @@ from ice.contrib.ought_shared.paragraph_synthesis.synthesize_compositional impor
 )
 from ice.contrib.ought_shared.utils import reorder_columns
 
-# from ice.recipes.synthesize_ft import synthesize_ft_from_df
 # from ice.recipes.synthesize_chain_of_thought import synthesize_chain_of_thought_from_df
 # from ice.recipes.synthesize import synthesize_from_df
 
