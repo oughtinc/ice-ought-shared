@@ -31,8 +31,6 @@ async def run_over_gs(
     answers_df["answer"] = await map_async(
         [row for _, row in answers_df.iterrows()],
         lambda row: run_recipe_on_row(row, recipe_to_run),
-        # set this if you're getting OpenAI errors
-        # max_concurrency=1
     )
     recipe_results = answers_df.apply(make_recipe_result, axis=1)
     evaluation_report = EvaluationReport(

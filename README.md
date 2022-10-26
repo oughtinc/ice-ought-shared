@@ -1,4 +1,4 @@
-# ICE + Anthropic
+# ICE Ought Shared
 Public Ought contrib repo for ICE.
 
 Put stuff here that won't be interesting or useful to most ICE users, but also isn't secret.
