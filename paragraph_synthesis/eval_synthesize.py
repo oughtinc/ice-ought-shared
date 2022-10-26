@@ -4,14 +4,13 @@ from ice.recipe import Recipe
 from ice.recipe import recipe
 from ice.contrib.ought_shared.eval.eval_vs_gs import run_over_gs
 from ice.contrib.ought_shared.paragraph_synthesis.synthesize_compositional import (
-    synthesize_compositional_from_df,
+    synthesize_compositional,
 )
 from ice.contrib.ought_shared.utils import reorder_columns
+from ice.recipes.abstract_qa import Abstract
+import json
 
-# from ice.recipes.synthesize_chain_of_thought import synthesize_chain_of_thought_from_df
-# from ice.recipes.synthesize import synthesize_from_df
-
-RECIPE_TO_RUN = synthesize_compositional_from_df
+RECIPE_TO_RUN = synthesize_compositional
 GS_FILENAME = "ice/contrib/ought_shared/paragraph_synthesis/paragraph_synthesis_gs.csv"
 SPLITS = ["validation"]
 
@@ -19,6 +18,16 @@ SPLITS = ["validation"]
 async def eval_synthesize():
     gs_df = pd.read_csv(GS_FILENAME)
     gs_df = gs_df[gs_df["is_gs"] == True].reset_index()
+    gs_df["abstracts"] = gs_df["papers"].apply(lambda papers: [
+        Abstract(
+            title=paper["title"],
+            authors=paper["authors"],
+            year=paper["year"],
+            text=paper["abstract"],
+        )
+        for paper in json.loads(papers)
+    ])
+
     answers_df = await run_over_gs(RECIPE_TO_RUN, gs_df, SPLITS)
     answers_df["question"] = answers_df["document_id"]
     gs_df.columns = [f"{column}_gs" for column in gs_df.columns]

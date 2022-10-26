@@ -6,7 +6,6 @@ from ice.recipe import recipe
 from ice.contrib.ought_shared.paragraph_synthesis.synthesize import _get_reference
 from ice.contrib.ought_shared.paragraph_synthesis.synthesize import Abstract
 from ice.contrib.ought_shared.paragraph_synthesis.synthesize import num_tokens
-from ice.contrib.ought_shared.paragraph_synthesis.synthesize import synthesize_from_df
 from ice.contrib.ought_shared.paragraph_synthesis.synthesize_ft import n_tokens
 
 PROMPT = """An ideal answer gives references to the academic literature. Example: "To our knowledge, the only freely and publicly available dense autoregressive language models larger than GPT2 are GPT-Neo (Black et al., 2021), GPT-J-6B (Wang and Komatsuzaki, 2021), Megatron-11B, Pangu-13B (Zeng et al., 2021), and the recently released FairSeq models (Artetxe et al., 2021)."
@@ -87,7 +86,7 @@ def _get_prompt(question, titles, citations, abstracts):
     return prompt, 4000 - n_tokens(prompt)
 
 
-async def synthesize_chain_of_thought(question: str, abstracts: list[Abstract]) -> str:
+async def synthesize_chain_of_thought(question: str, abstracts: list[Abstract], **kwargs) -> str:
     prompt, max_tokens = _get_prompt(
         question=question,
         titles=[abstract.title for abstract in abstracts],
@@ -105,9 +104,3 @@ async def synthesize_chain_of_thought(question: str, abstracts: list[Abstract]) 
     )
 
     return completion
-
-
-synthesize_chain_of_thought_from_df = partial(
-    synthesize_from_df, synthesize_fn=synthesize_chain_of_thought
-)
-synthesize_chain_of_thought_from_df.__name__ = "synthesize_chain_of_thought_from_df"

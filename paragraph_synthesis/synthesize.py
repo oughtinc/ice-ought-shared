@@ -94,7 +94,7 @@ def _get_reference(authors: list[str], year: int | None) -> str:
         return f"{authors[0]} et al. ({year})"
 
 
-async def synthesize(question: str, abstracts: list[Abstract]) -> str:
+async def synthesize(question: str, abstracts: list[Abstract], **kwargs) -> str:
 
     papers_str = "\n\n".join(
         [
@@ -137,21 +137,6 @@ async def synthesize_cli():
     gold_standard = "All four papers found that lower income is associated with higher smoking prevalence (Brunilda Casetta et al., 2016; M Huisman et al., 2005; Ariel Esteban Bardach et al., 2016; Mall Leinsalu et al., 2011). Two papers found that less education is also associated with higher smoking prevalence (M Huisman et al., 2005; Mall Leinsalu et al., 2011)."
     print(f"\nGold standard: {gold_standard}\n")
     return await synthesize(question, abstracts)
-
-
-async def synthesize_from_df(question, papers, synthesize_fn=synthesize, **kwargs):
-    return await synthesize_fn(
-        question,
-        [
-            Abstract(
-                title=paper["title"],
-                authors=paper["authors"],
-                year=paper["year"],
-                text=paper["abstract"],
-            )
-            for paper in json.loads(papers)
-        ],
-    )
 
 
 recipe.main(synthesize_cli)
