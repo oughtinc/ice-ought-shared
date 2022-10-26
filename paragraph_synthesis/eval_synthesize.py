@@ -8,12 +8,14 @@ from ice.contrib.ought_shared.paragraph_synthesis.synthesize_compositional impor
 )
 from ice.contrib.ought_shared.utils import reorder_columns
 from ice.recipes.abstract_qa import Abstract
+from pathlib import Path
 import json
 
 RECIPE_TO_RUN = synthesize_compositional
 GS_FILENAME = "ice/contrib/ought_shared/paragraph_synthesis/paragraph_synthesis_gs.csv"
 SPLITS = ["validation"]
 
+DATA_PATH = Path("ice/contrib/ought_shared/paragraph_synthesis/data/")
 
 async def eval_synthesize():
     gs_df = pd.read_csv(GS_FILENAME)
@@ -70,7 +72,9 @@ async def eval_synthesize():
         ],
     )
 
-    merged_df.to_csv(f"ice/contrib/ought_shared/paragraph_synthesis/data/{RECIPE_TO_RUN.__name__}_eval.csv", index=False)
+    DATA_PATH.mkdir(parents=True, exist_ok=True)
+
+    merged_df.to_csv(DATA_PATH / f"{RECIPE_TO_RUN.__name__}_eval.csv", index=False)
 
     return merged_df
 
