@@ -5,10 +5,10 @@ from functools import partial
 import transformers
 
 from ice.recipe import recipe
-from ice.contrib.ought_shared.recipes.paragraph_synthesis.synthesize import _get_reference
-from ice.contrib.ought_shared.recipes.paragraph_synthesis.synthesize import Abstract
-from ice.contrib.ought_shared.recipes.paragraph_synthesis.synthesize import num_tokens
-from ice.contrib.ought_shared.recipes.paragraph_synthesis.synthesize import synthesize_from_df
+from ice.contrib.ought_shared.paragraph_synthesis.synthesize import _get_reference
+from ice.contrib.ought_shared.paragraph_synthesis.synthesize import Abstract
+from ice.contrib.ought_shared.paragraph_synthesis.synthesize import num_tokens
+from ice.contrib.ought_shared.paragraph_synthesis.synthesize import synthesize_from_df
 
 tokenizer = transformers.GPT2Tokenizer.from_pretrained("gpt2")
 

@@ -2,8 +2,8 @@ import pandas as pd
 
 from ice.recipe import Recipe
 from ice.recipe import recipe
-from ice.contrib.ought_shared.recipes.eval.eval_vs_gs import run_over_gs
-from ice.contrib.ought_shared.recipes.paragraph_synthesis.synthesize_compositional import (
+from ice.contrib.ought_shared.eval.eval_vs_gs import run_over_gs
+from ice.contrib.ought_shared.paragraph_synthesis.synthesize_compositional import (
     synthesize_compositional_from_df,
 )
 from ice.contrib.ought_shared.utils import reorder_columns
@@ -13,13 +13,12 @@ from ice.contrib.ought_shared.utils import reorder_columns
 # from ice.recipes.synthesize import synthesize_from_df
 
 RECIPE_TO_RUN = synthesize_compositional_from_df
-GS_FILENAME = "gold_standards/paragraph_synthesis_gs.csv"
+GS_FILENAME = "ice/contrib/ought_shared/paragraph_synthesis/paragraph_synthesis_gs.csv"
 SPLITS = ["validation"]
 
 
 async def eval_synthesize():
     gs_df = pd.read_csv(GS_FILENAME)
-    gs_df = pd.read_csv("gold_standards/paragraph_synthesis_gs.csv")
     gs_df = gs_df[gs_df["is_gs"] == True].reset_index()
     answers_df = await run_over_gs(RECIPE_TO_RUN, gs_df, SPLITS)
     answers_df["question"] = answers_df["document_id"]
