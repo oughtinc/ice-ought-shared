@@ -61,7 +61,7 @@ async def eval_synthesize():
         ],
     )
 
-    merged_df.to_csv(f"data/{RECIPE_TO_RUN.__name__}_eval.csv", index=False)
+    merged_df.to_csv(f"ice/contrib/ought_shared/paragraph_synthesis/data/{RECIPE_TO_RUN.__name__}_eval.csv", index=False)
 
     return merged_df
 
