@@ -1,11 +1,11 @@
 # goals: 1. merge in adherence (allocation diverged)
 import pandas as pd
 from ice.recipes.consort_flow.types import ConsortFlow
-import yaml
-from yaml.scanner import ScannerError
-from pydantic import ValidationError
-from pprint import pprint
+from ice.contrib.ought_shared.utils import MyYAML
 from ice.contrib.ought_shared.consort_flow.validate_schema import validate_schema
+
+yaml = MyYAML()
+yaml.indent(mapping=2, sequence=4, offset=2)
 
 def sub_in_new_adherence(v1_row: pd.Series, adherence_df: pd.DataFrame) -> ConsortFlow:
     v1_flow: ConsortFlow = v1_row["flow_answer"]
@@ -22,28 +22,27 @@ def sub_in_new_adherence(v1_row: pd.Series, adherence_df: pd.DataFrame) -> Conso
                 v2_arm = [v2_arm for v2_arm in v2_experiment.arms if v2_arm.name == v1_arm.name][0]
 
                 v1_arm.received = v2_arm.received
+
+                if v2_arm.received:
+                    print(f"added received for arm {v1_arm.name} in experiment {v1_experiment.name} for document {v1_row['document_id']}")
             except IndexError:
                 print(f"did not find arm {v1_arm.name} for document {v1_row['document_id']}")
     
     return v1_flow
-
 
 if __name__ == "__main__":
     gs_df = pd.read_csv("gold_standards/gold_standards.csv")
     gs_df = gs_df[gs_df["question_short_name"].isin(["consort_flow", "consort_flow_with_adherence"])]
     validate_schema(gs_df)
 
-    gs_df["flow_answer"] = gs_df["answer"].apply(lambda x: ConsortFlow.parse_obj(yaml.full_load(x)))
+    gs_df["flow_answer"] = gs_df["answer"].apply(lambda x: ConsortFlow.parse_obj(yaml.load(x)))
 
-    v1_df = gs_df[gs_df["question_short_name"] == "consort_flow"].copy()
+    v2_df = gs_df[gs_df["question_short_name"] == "consort_flow"].copy()
     adherence_df = gs_df[gs_df["question_short_name"] == "consort_flow_with_adherence"].copy()
-    v1_df["consort_flow_v2"] = v1_df.apply(lambda row: sub_in_new_adherence(row, adherence_df), axis=1)
+    v2_df["consort_flow_v2"] = v2_df.apply(lambda row: sub_in_new_adherence(row, adherence_df), axis=1)
 
-    v1_df["answer"] = v1_df["consort_flow_v2"].apply(lambda x: yaml.dump(x.dict()))
+    v2_df["answer"] = v2_df["consort_flow_v2"].apply(lambda x: yaml.dump(x.dict()))
 
-    validate_schema(v1_df)
-
-    v1_df["question_short_name"] = "consort_flow_v2"
-    v1_df.to_csv("ice/contrib/ought_shared/consort_flow/v2_flows.csv", index=False)
-
-    print(v1_df["answer"])
+    validate_schema(v2_df)
+    v2_df["question_short_name"] = "consort_flow_v2"
+    v2_df.to_csv("ice/contrib/ought_shared/consort_flow/v2_flows.csv", index=False)
