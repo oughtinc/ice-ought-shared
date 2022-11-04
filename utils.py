@@ -2,7 +2,7 @@ import pandas as pd
 import sys
 from ruamel.yaml import YAML
 from ruamel.yaml.compat import StringIO
-import datetime
+from datetime import datetime
 
 def reorder_columns(df: pd.DataFrame, ordered_columns: list[str]) -> pd.DataFrame:
     rest_columns = [column for column in df.columns if column not in ordered_columns]
@@ -19,4 +19,5 @@ class MyYAML(YAML):
         YAML.dump(self, data, stream, **kw)
         if inefficient:
             return stream.getvalue()
+
 script_run_time = str(datetime.now().astimezone())

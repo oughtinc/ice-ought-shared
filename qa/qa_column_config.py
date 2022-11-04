@@ -2,11 +2,12 @@ import re
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from tkinter.tix import COLUMN
-from typing import Any, Final
+from typing import Final
 from typing import Optional
 
-Column, Source, QAResult = Any
+Column = {}
+Source = {}
+QAResult = {}
 
 # In testing, I found that the model is too hesitant to answer for many questions,
 # so these biases improved recall
@@ -218,6 +219,16 @@ qa_column_configs: dict[str, QAColumnConfig] = {
             process_answer=lambda answer: f"* {answer}".replace("*", "•"),
         ),
     ),
+    "outcome": QAColumnConfig(
+        sources=abstract_only,
+        question="What were the outcome variables?",
+        search_strategy=LMSearchStrategy(),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="The outcome variables were:\n*",
+            answer_bias=pro_answer_bias,
+            process_answer=lambda answer: f"* {answer}".replace("*", "•"),
+        ),
+    ),
     "duration": QAColumnConfig(
         question="What was the duration of the intervention in this paper?",
         search_strategy=LMSearchStrategy(),
@@ -247,7 +258,24 @@ What was the age of the participants in this paper? \
         ),
         is_numerical=True,
     ),
+    "final_n": QAColumnConfig(
+        question="What was the number of participants in the final analysis of this paper?",
+        search_strategy=LMSearchStrategy(),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="The number of participants in the final analysis was",
+            answer_bias=pro_answer_bias,
+        ),
+        is_numerical=True,
+    ),
     "region": QAColumnConfig(
+        question="What was the country or region where this study was done?",
+        search_strategy=LMSearchStrategy(),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="The country or region where this study was done was",
+            answer_bias=pro_answer_bias,
+        ),
+    ),
+    "country": QAColumnConfig(
         question="What was the country or region where this study was done?",
         search_strategy=LMSearchStrategy(),
         answer_strategy=InstructAnswerStrategy(
@@ -351,7 +379,7 @@ What was the age of the participants in this paper? \
         ),
         search_strategy=LMSearchStrategy(),
     ),
-    "funding-source": QAColumnConfig(
+    "funding_source": QAColumnConfig(
         sources=body_only,
         question="Who funded this study?",
         answer_strategy=InstructAnswerStrategy(
@@ -372,41 +400,57 @@ placebo: dose not mentioned""",
         ),
         is_numerical=True,
     ),
-    # Start compositional population
-    "population-breakdown": QAColumnConfig(
-        # TODO (jason) compositional columns should not have a root question. This right
-        # now is only used in logging. This should perhaps be `CompositionalColumnConfig`
-        question="What is the population summary?",
-        search_strategy=LMSearchStrategy(),
-        answer_strategy=CompositionalAnswerStrategy(
-            answer_bias=strong_pro_answer_bias,
-            sub_questions={
-                "Number of participants": Column(
-                    type="predefined", value="participant-count"
-                ),
-                "Age": Column(type="predefined", value="participant-age"),
-                "Organism": Column(type="predefined", value="organism"),
-                "Region": Column(type="predefined", value="region"),
-                "Sex": Column(type="predefined", value="Population - Sex"),
-                "Health conditions": Column(
-                    type="predefined", value="Population - Health Conditions"
-                ),
-                "Occupation": Column(
-                    type="predefined", value="Population - Occupation"
-                ),
-                "Characteristics": Column(
-                    type="predefined", value="population-characteristics"
-                ),
-            },
-            create_aggregation_prompt=generate_population_summary_prompt,
-            openai_stop=("Information used",),
-        ),
-    ),
+    # # Start compositional population
+    # "population-breakdown": QAColumnConfig(
+    #     # TODO (jason) compositional columns should not have a root question. This right
+    #     # now is only used in logging. This should perhaps be `CompositionalColumnConfig`
+    #     question="What is the population summary?",
+    #     search_strategy=LMSearchStrategy(),
+    #     answer_strategy=CompositionalAnswerStrategy(
+    #         answer_bias=strong_pro_answer_bias,
+    #         sub_questions={
+    #             "Number of participants": Column(
+    #                 type="predefined", value="participant-count"
+    #             ),
+    #             "Age": Column(type="predefined", value="participant-age"),
+    #             "Organism": Column(type="predefined", value="organism"),
+    #             "Region": Column(type="predefined", value="region"),
+    #             "Sex": Column(type="predefined", value="Population - Sex"),
+    #             "Health conditions": Column(
+    #                 type="predefined", value="Population - Health Conditions"
+    #             ),
+    #             "Occupation": Column(
+    #                 type="predefined", value="Population - Occupation"
+    #             ),
+    #             "Characteristics": Column(
+    #                 type="predefined", value="population-characteristics"
+    #             ),
+    #         },
+    #         create_aggregation_prompt=generate_population_summary_prompt,
+    #         openai_stop=("Information used",),
+    #     ),
+    # ),
     "Population - Sex": QAColumnConfig(
         question="""What sex(es) were the participants? E.g. "female", "male", "female and male?""",
         search_strategy=LMSearchStrategy(),
         answer_strategy=InstructAnswerStrategy(
             answer_prefix="Participant's sex(es) were",
+            answer_bias=pro_answer_bias,  # TODO extremely_strong_pro_answer_bias
+        ),
+    ),
+    "sex": QAColumnConfig(
+        question="""What sex(es) were the participants? E.g. "female", "male", "female and male?""",
+        search_strategy=LMSearchStrategy(),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="Participant's sex(es) were",
+            answer_bias=pro_answer_bias,  # TODO extremely_strong_pro_answer_bias
+        ),
+    ),
+    "health_conditions": QAColumnConfig(
+        question="""What, if any, health condition(s) did participants have? E.g. "cancer", "depression?""",
+        search_strategy=LMSearchStrategy(),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="Participant's health condition(s) was/were",
             answer_bias=pro_answer_bias,  # TODO extremely_strong_pro_answer_bias
         ),
     ),
@@ -426,24 +470,32 @@ placebo: dose not mentioned""",
             answer_bias=pro_answer_bias,
         ),
     ),
-    # End compositional population
-    # Start compositional intervention
-    "intervention-summary": QAColumnConfig(
-        # TODO (jason) compositional columns should not have a root question. This right
-        # now is only used in logging. This should perhaps be `CompositionalColumnConfig`
-        question="What is the intervention summary?",
+    "occupation": QAColumnConfig(
+        question="""What were the participants' occupations?""",
         search_strategy=LMSearchStrategy(),
-        answer_strategy=CompositionalAnswerStrategy(
-            answer_bias=strong_pro_answer_bias,
-            sub_questions={
-                "Intervention": Column(type="predefined", value="intervention"),
-                "Dose": Column(type="predefined", value="dose"),
-                "Duration": Column(type="predefined", value="duration"),
-            },
-            create_aggregation_prompt=generate_intervention_summary_prompt,
-            openai_stop=("Information used",),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="The participants' occupations were",
+            answer_bias=pro_answer_bias,
         ),
     ),
+    # End compositional population
+    # Start compositional intervention
+    # "intervention-summary": QAColumnConfig(
+    #     # TODO (jason) compositional columns should not have a root question. This right
+    #     # now is only used in logging. This should perhaps be `CompositionalColumnConfig`
+    #     question="What is the intervention summary?",
+    #     search_strategy=LMSearchStrategy(),
+    #     answer_strategy=CompositionalAnswerStrategy(
+    #         answer_bias=strong_pro_answer_bias,
+    #         sub_questions={
+    #             "Intervention": Column(type="predefined", value="intervention"),
+    #             "Dose": Column(type="predefined", value="dose"),
+    #             "Duration": Column(type="predefined", value="duration"),
+    #         },
+    #         create_aggregation_prompt=generate_intervention_summary_prompt,
+    #         openai_stop=("Information used",),
+    #     ),
+    # ),
     # End compositional intervention
     "adherence": QAColumnConfig(
         question="What was the adherence, take-up, or coverage in the study?",
@@ -466,6 +518,34 @@ placebo: dose not mentioned""",
         search_strategy=LMSearchStrategy(),
         answer_strategy=InstructAnswerStrategy(
             answer_prefix="The number of participants who began the study was",
+            answer_bias=pro_answer_bias,
+        ),
+    ),
+    "Age of participants": QAColumnConfig(
+        question="\
+What was the age of the participants in this paper? \
+(e.g. children, 40-55, 20 +/- 2 years, middle-aged)",
+        search_strategy=LMSearchStrategy(),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="The age of the participants in this paper was",
+            answer_bias=pro_answer_bias,
+        ),
+    ),
+    "age": QAColumnConfig(
+        question="\
+What was the age of the participants in this paper? \
+(e.g. children, 40-55, 20 +/- 2 years, middle-aged)",
+        search_strategy=LMSearchStrategy(),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="The age of the participants in this paper was",
+            answer_bias=pro_answer_bias,
+        ),
+    ),
+    "Placebo": QAColumnConfig(
+        question="""What placebo (sham treatment) did the study use, if any?""",
+        search_strategy=LMSearchStrategy(),
+        answer_strategy=InstructAnswerStrategy(
+            answer_prefix="The placebo used was",
             answer_bias=pro_answer_bias,
         ),
     ),
