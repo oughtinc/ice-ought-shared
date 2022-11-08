@@ -1,7 +1,6 @@
 from ice.recipe import Recipe, recipe, FunctionBasedRecipe
 import pandas as pd
 from ice.contrib.ought_shared.utils import script_run_time
-from ice.contrib.anthropic.anthropic_qa import anthropic_qa_from_kwargs
 from ice.utils import map_async
 
 async def run_recipe_on_row(row: pd.Series, recipe_to_run: Recipe):
